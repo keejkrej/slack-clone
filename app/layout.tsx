@@ -1,10 +1,17 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
-  title: 'Primer Starter',
-  description: "A starter app built with GitHub's Primer design system.",
+  title: 'Octo Labs | Chat',
+  description:
+    'A Slack-style team chat with channels, direct messages, threads, reactions, and search, built with the Primer design system.',
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0d1117',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
