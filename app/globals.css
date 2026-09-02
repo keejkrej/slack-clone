@@ -1,26 +1,43 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.13 0.02 260);
-  --foreground: oklch(0.95 0.01 260);
-  --card: oklch(0.17 0.02 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.18 0.02 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  --primary: oklch(0.68 0.16 285);
-  --primary-foreground: oklch(0.16 0.02 260);
-  --secondary: oklch(0.23 0.03 260);
-  --secondary-foreground: oklch(0.92 0.01 260);
-  --muted: oklch(0.22 0.025 260);
-  --muted-foreground: oklch(0.68 0.02 260);
-  --accent: oklch(0.28 0.04 260);
-  --accent-foreground: oklch(0.95 0.01 260);
-  --destructive: oklch(0.62 0.2 25);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.3 0.025 260);
-  --input: oklch(0.3 0.025 260);
-  --ring: oklch(0.68 0.16 285);
-  --radius: 0.5rem;
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 * { box-sizing: border-box; border-color: var(--border); }
@@ -28,21 +45,117 @@ html, body { min-height: 100vh; margin: 0; background: var(--background); color:
 button, input, textarea { font: inherit; }
 
 .chat-shell { display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; background:var(--background); }
-.chat-body { display:flex; flex:1; min-height:0; position:relative; }
-.chat-sidebar { width:260px; flex-shrink:0; display:flex; flex-direction:column; min-height:0; background:var(--card); border-right:1px solid var(--border); overflow-y:auto; }
-.chat-main { flex:1; min-width:0; display:flex; flex-direction:column; min-height:0; }
-.chat-thread { width:380px; flex-shrink:0; display:flex; flex-direction:column; min-height:0; border-left:1px solid var(--border); background:var(--background); }
+.chat-topbar { height:44px; flex-shrink:0; background:#350d36; color:#fff; }
+.chat-body { display:flex; flex:1; min-height:0; position:relative; background:#fff; }
+.chat-sidebar { width:260px; flex-shrink:0; display:flex; flex-direction:column; min-height:0; background:#3F0E40; color:#fff; overflow:hidden; }
+.chat-main { flex:1; min-width:0; display:flex; flex-direction:column; min-height:0; background:#fff; }
+.chat-thread { width:380px; flex-shrink:0; display:flex; flex-direction:column; min-height:0; border-left:1px solid var(--border); background:#fff; }
 .chat-scroll { flex:1; min-height:0; overflow-y:auto; }
-.chat-message { position:relative; padding:1rem 1.25rem; border-radius:.5rem; }
-.chat-message:hover,.chat-message:focus-within { background:var(--muted); }
-.chat-message-actions { position:absolute; top:-.75rem; right:1rem; opacity:0; pointer-events:none; transition:opacity .1s ease; }
+.chat-message { position:relative; }
+.chat-message:hover,.chat-message:focus-within { background:color-mix(in oklch, var(--muted) 80%, transparent); }
+.chat-message[data-highlight='true'] { background:color-mix(in oklch, var(--primary) 8%, white); }
+.chat-message-actions { position:absolute; top:-.75rem; right:1rem; opacity:0; pointer-events:none; transition:opacity .1s ease; z-index:2; }
 .chat-message:hover .chat-message-actions,.chat-message:focus-within .chat-message-actions,.chat-message-actions[data-open='true'] { opacity:1; pointer-events:auto; }
 .chat-reaction { display:inline-flex; align-items:center; gap:.25rem; height:1.5rem; padding:0 .5rem; border-radius:999px; border:1px solid var(--border); background:var(--muted); color:var(--foreground); font-size:.75rem; cursor:pointer; }
-.chat-reaction[data-active='true'] { background:color-mix(in oklch,var(--primary) 18%,transparent); border-color:var(--primary); color:var(--primary); }
+.chat-reaction[data-active='true'] { background:#e8f5fd; border-color:#1d9bd1; color:#1264a3; }
 .chat-emoji { width:2.25rem; height:2.25rem; border:0; border-radius:.5rem; background:transparent; cursor:pointer; font-size:1.25rem; }
 .chat-emoji:hover { background:var(--muted); }
 .chat-result { width:100%; text-align:left; background:transparent; border:0; border-radius:.5rem; padding:.75rem 1rem; cursor:pointer; color:inherit; }
 .chat-result:hover { background:var(--muted); }
 .chat-menu-toggle,.chat-backdrop { display:none; }
-@media (max-width:900px){.chat-thread{position:absolute;inset:0;width:auto;z-index:2}}
-@media (max-width:768px){.chat-menu-toggle{display:inline-flex}.chat-sidebar{position:absolute;inset:0 auto 0 0;z-index:4;transform:translateX(-100%);transition:transform .2s ease;box-shadow:0 16px 40px color-mix(in oklch,var(--background) 60%,transparent)}.chat-sidebar[data-open='true']{transform:translateX(0)}.chat-backdrop{display:block;position:absolute;inset:0;z-index:3;background:color-mix(in oklch,var(--background) 70%,transparent);border:0}}
+@media (max-width:768px){
+  .chat-menu-toggle{display:inline-flex}
+  .chat-sidebar{position:absolute;inset:0 auto 0 0;z-index:4;transform:translateX(-100%);transition:transform .2s ease;box-shadow:8px 0 24px rgb(0 0 0 / 25%);width:min(280px,86vw)}
+  .chat-sidebar[data-open='true']{transform:translateX(0)}
+  .chat-backdrop{display:block;position:absolute;inset:0;z-index:3;background:rgb(0 0 0 / 45%);border:0}
+  .chat-thread{position:absolute;inset:0;width:auto;min-width:0;z-index:2}
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

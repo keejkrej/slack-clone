@@ -1,142 +1,279 @@
 'use client'
 
+import { useState } from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
-  Stack,
-  Text,
-  Heading,
-  IconButton,
-  Button,
-  AvatarStack,
-  Avatar,
-  ActionMenu,
-  ActionList,
-} from './ui'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
-  HashIcon,
-  LockIcon,
-  ChevronDownIcon,
-  PinIcon,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { initials, type NotificationPref } from '@/lib/data'
+import { toast } from 'sonner'
+import { useWorkspace } from './workspace-provider'
+import { PresenceAvatar } from './presence-avatar'
+import { UserHoverCard } from './user-profile'
+import {
   BellIcon,
-  PersonAddIcon,
+  BellOffIcon,
+  ChevronDownIcon,
+  HashIcon,
   InfoIcon,
+  LockIcon,
+  PersonAddIcon,
+  PinIcon,
   StarIcon,
   ThreeBarsIcon,
 } from './icons'
-import { getChannel, getUser } from '@/lib/data'
-import { useWorkspace } from './workspace-provider'
-import { PresenceAvatar } from './presence-avatar'
+import {
+  ChannelDetailsDialog,
+  InviteMembersDialog,
+} from './dialogs'
+import { MessageBody } from './message-body'
 
 export function ConversationHeader({ conversationId }: { conversationId: string }) {
-  const { toggleSidebar } = useWorkspace()
+  const {
+    toggleSidebar,
+    channelById,
+    userById,
+    users,
+    messages,
+    starredChannelIds,
+    toggleStar,
+    leaveChannel,
+    notificationPrefs,
+    setNotificationPref,
+    jumpToMessage,
+    isMember,
+  } = useWorkspace()
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
+
   const isChannel = conversationId.startsWith('channel:')
-  const channel = isChannel ? getChannel(conversationId.slice('channel:'.length)) : undefined
-  const user = !isChannel ? getUser(conversationId.slice('dm:'.length)) : undefined
+  const channel = isChannel
+    ? channelById(conversationId.slice('channel:'.length))
+    : undefined
+  const user = !isChannel
+    ? userById(conversationId.slice('dm:'.length))
+    : undefined
+
+  const pinned = messages.filter(
+    (m) => m.conversationId === conversationId && m.pinned && !m.deleted,
+  )
+  const pref = notificationPrefs[conversationId] ?? 'all'
+  const starred = channel ? starredChannelIds.includes(channel.id) : false
+  const member = channel ? isMember(channel.id) : true
 
   return (
-    <header
-      style={{
-        borderBottom: 'var(--borderWidth-thin) solid var(--borderColor-default)',
-        backgroundColor: 'var(--bgColor-default)',
-        flexShrink: 0,
-      }}
-    >
-      <Stack
-        direction="horizontal"
-        align="center"
-        justify="space-between"
-        gap="condensed"
-        style={{
-          height: 'var(--base-size-48)',
-          paddingInline: 'var(--base-size-12)',
-        }}
-      >
-        <Stack direction="horizontal" align="center" gap="condensed" style={{ minWidth: 0 }}>
-          <IconButton
+    <header className="shrink-0 border-b bg-background">
+      <div className="flex h-12 items-center justify-between gap-2 px-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Button
             className="chat-menu-toggle"
-            icon={ThreeBarsIcon}
+            variant="ghost"
+            size="icon-sm"
             aria-label="Open sidebar"
-            variant="invisible"
             onClick={() => toggleSidebar(true)}
-          />
+          >
+            <ThreeBarsIcon />
+          </Button>
           {channel && (
-            <ActionMenu>
-              <ActionMenu.Anchor>
-                <Button
-                  variant="invisible"
-                  leadingVisual={channel.isPrivate ? LockIcon : HashIcon}
-                  trailingVisual={ChevronDownIcon}
-                  style={{ color: 'var(--fgColor-default)' }}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex min-w-0 items-center gap-1 rounded-md px-1.5 py-1 hover:bg-muted">
+                {channel.isPrivate ? (
+                  <LockIcon className="size-4 shrink-0" />
+                ) : (
+                  <HashIcon className="size-4 shrink-0" />
+                )}
+                <h1 className="truncate text-base font-bold">{channel.name}</h1>
+                <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-56">
+                <DropdownMenuItem onClick={() => setDetailsOpen(true)}>
+                  <InfoIcon /> Channel details
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toggleStar(channel.id)}>
+                  <StarIcon /> {starred ? 'Unstar channel' : 'Star channel'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={pref}
+                  onValueChange={(value) =>
+                    setNotificationPref(conversationId, value as NotificationPref)
+                  }
                 >
-                  <Heading as="h1" variant="small" style={{ fontSize: 'inherit' }}>
-                    {channel.name}
-                  </Heading>
-                </Button>
-              </ActionMenu.Anchor>
-              <ActionMenu.Overlay width="medium">
-                <ActionList>
-                  <ActionList.Item>
-                    <ActionList.LeadingVisual>
-                      <InfoIcon />
-                    </ActionList.LeadingVisual>
-                    Channel details
-                    <ActionList.Description variant="block">
-                      {channel.description}
-                    </ActionList.Description>
-                  </ActionList.Item>
-                  <ActionList.Item>
-                    <ActionList.LeadingVisual>
-                      <StarIcon />
-                    </ActionList.LeadingVisual>
-                    Star channel
-                  </ActionList.Item>
-                  <ActionList.Item>
-                    <ActionList.LeadingVisual>
-                      <BellIcon />
-                    </ActionList.LeadingVisual>
-                    Notification preferences
-                  </ActionList.Item>
-                  <ActionList.Divider />
-                  <ActionList.Item variant="danger">Leave channel</ActionList.Item>
-                </ActionList>
-              </ActionMenu.Overlay>
-            </ActionMenu>
+                  <DropdownMenuRadioItem value="all">All messages</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="mentions">Mentions only</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="muted">Mute channel</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => {
+                    leaveChannel(channel.id)
+                    toast.success(`Left #${channel.name}`)
+                  }}
+                >
+                  Leave channel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {user && (
-            <Stack direction="horizontal" align="center" gap="condensed">
-              <PresenceAvatar user={user} size={24} />
-              <Heading as="h1" variant="small">
-                {user.name}
-              </Heading>
-              <Text size="small" style={{ color: 'var(--fgColor-muted)' }}>
-                {user.title}
-              </Text>
-            </Stack>
+            <UserHoverCard user={user}>
+              <div className="flex items-center gap-2">
+                <PresenceAvatar user={user} size={24} />
+                <h1 className="text-base font-bold">{user.name}</h1>
+                <span className="hidden text-sm text-muted-foreground sm:inline">
+                  {user.title}
+                </span>
+              </div>
+            </UserHoverCard>
           )}
-        </Stack>
+          {channel?.topic && (
+            <button
+              type="button"
+              className="hidden min-w-0 truncate text-sm text-muted-foreground hover:underline md:block"
+              onClick={() => setDetailsOpen(true)}
+            >
+              {channel.topic}
+            </button>
+          )}
+        </div>
 
-        <Stack direction="horizontal" align="center" gap="condensed">
+        <div className="flex items-center gap-1">
           {channel && (
             <Button
-              variant="default"
-              size="small"
-              trailingVisual={PersonAddIcon}
+              variant="outline"
+              size="sm"
               aria-label={`${channel.memberIds.length} members`}
+              onClick={() => setDetailsOpen(true)}
             >
-              <Stack direction="horizontal" align="center" gap="condensed">
-                <AvatarStack size={20}>
-                  {channel.memberIds.slice(0, 3).map((id) => {
-                    const u = getUser(id)
-                    return <Avatar key={id} src={u.avatar} alt={u.name} square />
-                  })}
-                </AvatarStack>
-                <span>{channel.memberIds.length}</span>
-              </Stack>
+              <span className="flex -space-x-1">
+                {channel.memberIds.slice(0, 3).map((id) => {
+                  const u = userById(id)
+                  return (
+                    <Avatar key={id} className="size-5 rounded-md after:rounded-md">
+                      <AvatarImage src={u.avatar} alt={u.name} className="rounded-md" />
+                      <AvatarFallback className="rounded-md text-[8px]">
+                        {initials(u.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )
+                })}
+              </span>
+              <span>{channel.memberIds.length}</span>
             </Button>
           )}
-          <IconButton icon={PinIcon} aria-label="Pinned messages" variant="invisible" />
-          <IconButton icon={BellIcon} aria-label="Notifications" variant="invisible" />
-        </Stack>
-      </Stack>
+          {channel && member && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Invite people"
+                    onClick={() => setInviteOpen(true)}
+                  />
+                }
+              >
+                <PersonAddIcon />
+              </TooltipTrigger>
+              <TooltipContent>Add people</TooltipContent>
+            </Tooltip>
+          )}
+          <Popover>
+            <PopoverTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label="Pinned messages" />
+              }
+            >
+              <PinIcon />
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80">
+              <p className="mb-2 text-sm font-semibold">Pinned messages</p>
+              {pinned.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No pinned messages in this conversation.
+                </p>
+              ) : (
+                <ScrollArea className="max-h-72">
+                  <div className="flex flex-col gap-2">
+                    {pinned.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className="rounded-md border p-2 text-left hover:bg-muted"
+                        onClick={() => jumpToMessage(m)}
+                      >
+                        <p className="text-xs font-medium">
+                          {userById(m.authorId).name} · {m.day} {m.time}
+                        </p>
+                        <MessageBody text={m.text} users={users} className="text-sm" />
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </PopoverContent>
+          </Popover>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Notifications"
+                  onClick={() =>
+                    setNotificationPref(
+                      conversationId,
+                      pref === 'muted' ? 'all' : 'muted',
+                    )
+                  }
+                />
+              }
+            >
+              {pref === 'muted' ? <BellOffIcon /> : <BellIcon />}
+            </TooltipTrigger>
+            <TooltipContent>
+              {pref === 'muted' ? 'Unmute' : 'Mute'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+      {channel && (
+        <>
+          <ChannelDetailsDialog
+            open={detailsOpen}
+            onOpenChange={setDetailsOpen}
+            channel={channel}
+            onInvite={() => {
+              setDetailsOpen(false)
+              setInviteOpen(true)
+            }}
+          />
+          <InviteMembersDialog
+            open={inviteOpen}
+            onOpenChange={setInviteOpen}
+            channel={channel}
+          />
+        </>
+      )}
     </header>
   )
 }

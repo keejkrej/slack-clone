@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from '@/components/providers'
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: 'Octo Labs | Chat',
@@ -9,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0d1117',
+  themeColor: '#ffffff',
   width: 'device-width',
   initialScale: 1,
 }
@@ -22,7 +26,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className="dark"
+      className={cn("font-sans", geist.variable)}
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>

@@ -1,94 +1,111 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Stack, Text, Heading, IconButton } from './ui'
-import { XIcon } from './icons'
-import { conversationLabel, getUser } from '@/lib/data'
+import { Button } from '@/components/ui/button'
+import { channelIdFrom, conversationLabel } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { MessageItem } from './message-item'
 import { Composer } from './composer'
+import { XIcon } from './icons'
 
 export function ThreadPane({ messageId }: { messageId: string }) {
-  const { messages, closeThread, sendMessage } = useWorkspace()
+  const {
+    messages,
+    closeThread,
+    channels,
+    users,
+    userById,
+    highlightMessageId,
+    isMember,
+  } = useWorkspace()
   const parent = messages.find((m) => m.id === messageId)
   const replies = messages.filter((m) => m.parentId === messageId)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (highlightMessageId) {
+      const el = document.getElementById(`message-${highlightMessageId}`)
+      if (el) {
+        el.scrollIntoView({ block: 'center' })
+        return
+      }
+    }
     bottomRef.current?.scrollIntoView({ block: 'end' })
-  }, [replies.length])
+  }, [replies.length, highlightMessageId])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      closeThread()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [closeThread])
 
   if (!parent) return null
 
-  const author = getUser(parent.authorId)
+  const author = userById(parent.authorId)
+  const channelId = channelIdFrom(parent.conversationId)
+  const member = channelId ? isMember(channelId) : true
+  const channel = channelId ? channels.find((c) => c.id === channelId) : undefined
 
   return (
-    <section className="chat-thread" aria-label={`Thread with ${author.name}`}>
-      <Stack
-        direction="horizontal"
-        align="center"
-        justify="space-between"
-        style={{
-          height: 'var(--base-size-48)',
-          paddingInline: 'var(--base-size-16)',
-          borderBottom: 'var(--borderWidth-thin) solid var(--borderColor-default)',
-          flexShrink: 0,
-        }}
-      >
-        <Stack direction="horizontal" align="baseline" gap="condensed">
-          <Heading as="h2" variant="small">
-            Thread
-          </Heading>
-          <Text size="small" style={{ color: 'var(--fgColor-muted)' }}>
-            {conversationLabel(parent.conversationId)}
-          </Text>
-        </Stack>
-        <IconButton
-          icon={XIcon}
-          aria-label="Close thread"
-          variant="invisible"
-          onClick={closeThread}
-        />
-      </Stack>
-
-      <div className="chat-scroll" style={{ paddingBlock: 'var(--base-size-12)' }}>
-        <div style={{ paddingInline: 'var(--base-size-4)' }}>
-          <MessageItem message={parent} compact showThreadSummary={false} />
+    <section
+      className="flex h-full min-h-0 flex-col bg-background"
+      aria-label={`Thread with ${author.name}`}
+    >
+      <div className="flex h-12 shrink-0 items-center justify-between border-b px-4">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-base font-semibold">Thread</h2>
+          <span className="text-sm text-muted-foreground">
+            {conversationLabel(parent.conversationId, channels, users)}
+          </span>
         </div>
-
-        <Stack
-          direction="horizontal"
-          align="center"
-          gap="condensed"
-          style={{ padding: 'var(--base-size-8) var(--base-size-20)' }}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Close thread"
+          onClick={closeThread}
         >
-          <Text size="small" weight="semibold" style={{ color: 'var(--fgColor-muted)', whiteSpace: 'nowrap' }}>
-            {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
-          </Text>
-          <span
-            aria-hidden
-            style={{
-              flex: 1,
-              borderTop: 'var(--borderWidth-thin) solid var(--borderColor-default)',
-            }}
-          />
-        </Stack>
+          <XIcon />
+        </Button>
+      </div>
 
-        <Stack direction="vertical" gap="condensed" style={{ paddingInline: 'var(--base-size-4)' }}>
-          {replies.map((reply) => (
-            <MessageItem key={reply.id} message={reply} compact showThreadSummary={false} />
-          ))}
-        </Stack>
+      <div className="chat-scroll py-3">
+        <MessageItem message={parent} showThreadSummary={false} />
+        <div className="flex items-center gap-2 px-5 py-2">
+          <span className="whitespace-nowrap text-xs font-semibold text-muted-foreground">
+            {replies.length} {replies.length === 1 ? 'reply' : 'replies'}
+          </span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+        {replies.map((reply) => (
+          <MessageItem
+            key={reply.id}
+            message={reply}
+            compact={false}
+            showThreadSummary={false}
+          />
+        ))}
         <div ref={bottomRef} />
       </div>
 
-      <div style={{ padding: 'var(--base-size-12) var(--base-size-16)', flexShrink: 0 }}>
-        <Composer
-          compact
-          autoFocus
-          placeholder="Reply..."
-          onSend={(text) => sendMessage(parent.conversationId, text, parent.id)}
-        />
+      <div className="shrink-0 p-3">
+        {member ? (
+          <Composer
+            compact
+            autoFocus
+            conversationId={parent.conversationId}
+            parentId={parent.id}
+            placeholder="Reply…"
+          />
+        ) : (
+          <p className="px-1 text-sm text-muted-foreground">
+            {channel?.isPrivate
+              ? 'You no longer have access to this private channel.'
+              : 'Join this channel to reply in the thread.'}
+          </p>
+        )}
       </div>
     </section>
   )

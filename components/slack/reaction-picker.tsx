@@ -1,9 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { AnchoredOverlay, IconButton, Text, Stack } from './ui'
-import { SmileyIcon } from './icons'
+import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { EMOJI_CHOICES } from '@/lib/data'
+import { SmileyIcon } from './icons'
 
 export function ReactionPicker({
   onPick,
@@ -16,45 +21,30 @@ export function ReactionPicker({
 }) {
   const [open, setOpen] = useState(false)
 
-  const setOpenState = (next: boolean) => {
+  const changeOpen = (next: boolean) => {
     setOpen(next)
     onOpenChange?.(next)
   }
 
   return (
-    <AnchoredOverlay
-      open={open}
-      onOpen={() => setOpenState(true)}
-      onClose={() => setOpenState(false)}
-      side="outside-top"
-      align="end"
-      renderAnchor={(anchorProps) => (
-        <IconButton
-          {...anchorProps}
-          icon={SmileyIcon}
-          aria-label="Add reaction"
-          variant="invisible"
-          size={size}
-        />
-      )}
-    >
-      <Stack direction="vertical" gap="condensed" padding="condensed">
-        <Text
-          size="small"
-          weight="semibold"
-          style={{ color: 'var(--fgColor-muted)', paddingInline: 4 }}
-        >
+    <Popover open={open} onOpenChange={changeOpen}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size={size === 'small' ? 'icon-xs' : 'icon-sm'}
+            aria-label="Add reaction"
+            className="text-muted-foreground"
+          />
+        }
+      >
+        <SmileyIcon />
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-auto p-2" side="top">
+        <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">
           Frequently used
-        </Text>
-        <div
-          role="group"
-          aria-label="Emoji"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(8, var(--base-size-36))',
-            gap: 2,
-          }}
-        >
+        </p>
+        <div role="group" aria-label="Emoji" className="grid grid-cols-8 gap-0.5">
           {EMOJI_CHOICES.map((emoji) => (
             <button
               key={emoji}
@@ -63,14 +53,14 @@ export function ReactionPicker({
               aria-label={`React with ${emoji}`}
               onClick={() => {
                 onPick(emoji)
-                setOpenState(false)
+                changeOpen(false)
               }}
             >
               {emoji}
             </button>
           ))}
         </div>
-      </Stack>
-    </AnchoredOverlay>
+      </PopoverContent>
+    </Popover>
   )
 }

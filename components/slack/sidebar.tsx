@@ -1,64 +1,131 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
-  NavList,
-  Stack,
-  Text,
-  Heading,
-  IconButton,
-  CounterLabel,
-  Button,
-  ActionMenu,
-  ActionList,
-  FormControl,
-  TextInput,
-  Checkbox,
-} from './ui'
-import { Dialog } from './ui'
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
-  HashIcon,
-  LockIcon,
-  PlusIcon,
-  ChevronDownIcon,
-  PencilIcon,
-  InboxIcon,
-  CommentDiscussionIcon,
-  BookmarkIcon,
-  GearIcon,
-  SignOutIcon,
-  PersonIcon,
-} from './icons'
-import { users, CURRENT_USER_ID, getUser } from '@/lib/data'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { CURRENT_USER_ID, presenceLabel } from '@/lib/data'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { useWorkspace } from './workspace-provider'
 import { PresenceAvatar } from './presence-avatar'
+import {
+  BookmarkIcon,
+  ChevronDownIcon,
+  CommentDiscussionIcon,
+  GearIcon,
+  HashIcon,
+  InboxIcon,
+  LockIcon,
+  PencilIcon,
+  PersonAddIcon,
+  PersonIcon,
+  PlusIcon,
+  SignOutIcon,
+  StarIcon,
+} from './icons'
+import {
+  BrowseChannelsDialog,
+  CreateChannelDialog,
+  NewMessageDialog,
+  WorkspaceSettingsDialog,
+} from './dialogs'
+import { UserProfileDialog } from './user-profile'
+
+function UnreadBadge({
+  count,
+  mention,
+}: {
+  count?: number
+  mention?: number
+}) {
+  if (!count && !mention) return null
+  return (
+    <span
+      className={cn(
+        'ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-bold text-white',
+        mention ? 'bg-[#E01E5A]' : 'bg-[#E01E5A]',
+      )}
+    >
+      {mention ? mention : count}
+    </span>
+  )
+}
+
+function NavButton({
+  active,
+  unread,
+  mention,
+  onClick,
+  children,
+}: {
+  active?: boolean
+  unread?: boolean
+  mention?: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-2 rounded-md px-3 py-1 text-left text-[15px] text-white/70 hover:bg-white/10',
+        unread && 'font-bold text-white',
+        mention && 'font-bold text-white',
+        active && 'bg-[#1164A3] font-medium text-white hover:bg-[#1164A3]',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
 
 export function Sidebar() {
   const {
     channels,
+    users,
+    messages,
     activeConversationId,
     selectConversation,
     unread,
-    createChannel,
+    mentionUnread,
     sidebarOpen,
     toggleSidebar,
+    view,
+    setView,
+    starredChannelIds,
+    currentUser,
+    isMember,
   } = useWorkspace()
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [isPrivate, setIsPrivate] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [newMessageOpen, setNewMessageOpen] = useState(false)
+  const [browseOpen, setBrowseOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
 
-  const me = getUser(CURRENT_USER_ID)
   const others = users.filter((u) => u.id !== CURRENT_USER_ID)
+  const joinedChannels = channels.filter(
+    (c) => isMember(c.id) && !starredChannelIds.includes(c.id),
+  )
+  const starredChannels = channels.filter((c) => starredChannelIds.includes(c.id))
 
-  const submitChannel = () => {
-    if (!name.trim()) return
-    createChannel(name, description, isPrivate)
-    setDialogOpen(false)
-    setName('')
-    setDescription('')
-    setIsPrivate(false)
-  }
+  const mentionCount = useMemo(
+    () => Object.values(mentionUnread).reduce((sum, n) => sum + n, 0),
+    [mentionUnread],
+  )
+
+  const savedCount = messages.filter((m) => m.saved && !m.deleted).length
 
   return (
     <>
@@ -71,238 +138,219 @@ export function Sidebar() {
         />
       )}
       <aside className="chat-sidebar" data-open={sidebarOpen} aria-label="Workspace navigation">
-        <Stack
-          direction="horizontal"
-          align="center"
-          justify="space-between"
-          style={{
-            height: 'var(--base-size-48)',
-            paddingInline: 'var(--base-size-12)',
-            paddingLeft: 'var(--base-size-16)',
-            borderBottom: 'var(--borderWidth-thin) solid var(--borderColor-default)',
-            flexShrink: 0,
-          }}
-        >
-          <ActionMenu>
-            <ActionMenu.Anchor>
-              <Button
-                variant="invisible"
-                trailingVisual={ChevronDownIcon}
-                style={{ color: 'var(--fgColor-default)', paddingInline: 'var(--base-size-4)' }}
+        <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/10 px-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1 rounded-md px-1.5 py-1 text-left font-bold text-white hover:bg-white/10">
+              Octo Labs
+              <ChevronDownIcon className="size-4 opacity-80" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-56">
+              <DropdownMenuItem
+                onClick={() => toast.message('Everyone on this demo is already in Octo Labs.')}
               >
-                <Heading as="h2" variant="small" style={{ fontSize: 'var(--text-body-size-large)' }}>
-                  Octo Labs
-                </Heading>
-              </Button>
-            </ActionMenu.Anchor>
-            <ActionMenu.Overlay width="medium">
-              <ActionList>
-                <ActionList.Item>
-                  <ActionList.LeadingVisual>
-                    <PersonIcon />
-                  </ActionList.LeadingVisual>
-                  Invite people to Octo Labs
-                </ActionList.Item>
-                <ActionList.Item>
-                  <ActionList.LeadingVisual>
-                    <GearIcon />
-                  </ActionList.LeadingVisual>
-                  Workspace settings
-                </ActionList.Item>
-                <ActionList.Divider />
-                <ActionList.Item variant="danger">
-                  <ActionList.LeadingVisual>
-                    <SignOutIcon />
-                  </ActionList.LeadingVisual>
-                  Sign out
-                </ActionList.Item>
-              </ActionList>
-            </ActionMenu.Overlay>
-          </ActionMenu>
-          <IconButton
-            icon={PencilIcon}
+                <PersonIcon /> Invite people to Octo Labs
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                <GearIcon /> Workspace settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() =>
+                  toast.message("This is a client-only demo — you're still signed in as Alex.")
+                }
+              >
+                <SignOutIcon /> Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             aria-label="New message"
-            variant="invisible"
-            onClick={() => setDialogOpen(true)}
-          />
-        </Stack>
-
-        <div style={{ padding: 'var(--base-size-8)', flex: 1 }}>
-          <NavList aria-label="Conversations">
-            <NavList.Item href="#" onClick={(e) => e.preventDefault()}>
-              <NavList.LeadingVisual>
-                <CommentDiscussionIcon />
-              </NavList.LeadingVisual>
-              Threads
-            </NavList.Item>
-            <NavList.Item href="#" onClick={(e) => e.preventDefault()}>
-              <NavList.LeadingVisual>
-                <InboxIcon />
-              </NavList.LeadingVisual>
-              Activity
-              <NavList.TrailingVisual>
-                <CounterLabel>4</CounterLabel>
-              </NavList.TrailingVisual>
-            </NavList.Item>
-            <NavList.Item href="#" onClick={(e) => e.preventDefault()}>
-              <NavList.LeadingVisual>
-                <BookmarkIcon />
-              </NavList.LeadingVisual>
-              Saved items
-            </NavList.Item>
-
-            <NavList.Divider />
-
-            <NavList.Group title="Channels">
-              {channels.map((channel) => {
-                const id = `channel:${channel.id}`
-                const count = unread[id]
-                const active = id === activeConversationId
-                return (
-                  <NavList.Item
-                    key={channel.id}
-                    href="#"
-                    aria-current={active ? 'page' : undefined}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      selectConversation(id)
-                    }}
-                  >
-                    <NavList.LeadingVisual>
-                      {channel.isPrivate ? <LockIcon /> : <HashIcon />}
-                    </NavList.LeadingVisual>
-                    <span style={{ fontWeight: count ? 'var(--base-text-weight-semibold)' : undefined }}>
-                      {channel.name}
-                    </span>
-                    {count ? (
-                      <NavList.TrailingVisual>
-                        <CounterLabel scheme="primary">{count}</CounterLabel>
-                      </NavList.TrailingVisual>
-                    ) : null}
-                  </NavList.Item>
-                )
-              })}
-              <NavList.Item
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  setDialogOpen(true)
-                }}
-              >
-                <NavList.LeadingVisual>
-                  <PlusIcon />
-                </NavList.LeadingVisual>
-                <Text style={{ color: 'var(--fgColor-muted)' }}>Add channel</Text>
-              </NavList.Item>
-            </NavList.Group>
-
-            <NavList.Group title="Direct messages">
-              {others.map((user) => {
-                const id = `dm:${user.id}`
-                const count = unread[id]
-                const active = id === activeConversationId
-                return (
-                  <NavList.Item
-                    key={user.id}
-                    href="#"
-                    aria-current={active ? 'page' : undefined}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      selectConversation(id)
-                    }}
-                  >
-                    <NavList.LeadingVisual>
-                      <PresenceAvatar user={user} size={20} />
-                    </NavList.LeadingVisual>
-                    <span style={{ fontWeight: count ? 'var(--base-text-weight-semibold)' : undefined }}>
-                      {user.name}
-                    </span>
-                    {count ? (
-                      <NavList.TrailingVisual>
-                        <CounterLabel scheme="primary">{count}</CounterLabel>
-                      </NavList.TrailingVisual>
-                    ) : null}
-                  </NavList.Item>
-                )
-              })}
-            </NavList.Group>
-          </NavList>
+            className="text-white hover:bg-white/10 hover:text-white"
+            onClick={() => setNewMessageOpen(true)}
+          >
+            <PencilIcon />
+          </Button>
         </div>
 
-        <Stack
-          direction="horizontal"
-          align="center"
-          gap="condensed"
-          style={{
-            padding: 'var(--base-size-12) var(--base-size-16)',
-            borderTop: 'var(--borderWidth-thin) solid var(--borderColor-default)',
-            flexShrink: 0,
-          }}
+        <div className="flex-1 overflow-y-auto px-2 py-2">
+          <nav aria-label="Conversations" className="flex flex-col gap-0.5">
+            <NavButton active={view === 'threads'} onClick={() => setView('threads')}>
+              <CommentDiscussionIcon className="size-4 shrink-0" />
+              Threads
+            </NavButton>
+            <NavButton
+              active={view === 'activity'}
+              unread={mentionCount > 0}
+              mention={mentionCount > 0}
+              onClick={() => setView('activity')}
+            >
+              <InboxIcon className="size-4 shrink-0" />
+              Activity
+              {mentionCount > 0 && <UnreadBadge mention={mentionCount} />}
+            </NavButton>
+            <NavButton
+              active={view === 'saved'}
+              onClick={() => setView('saved')}
+            >
+              <BookmarkIcon className="size-4 shrink-0" />
+              Later
+              {savedCount > 0 && (
+                <span className="ml-auto text-[11px] text-white/50">{savedCount}</span>
+              )}
+            </NavButton>
+
+            {starredChannels.length > 0 && (
+              <Collapsible defaultOpen className="mt-3">
+                <CollapsibleTrigger className="flex w-full items-center gap-1 px-3 py-1 text-[13px] text-white/60 hover:text-white">
+                  <ChevronDownIcon className="size-3" />
+                  Starred
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {starredChannels.map((channel) => {
+                    const id = `channel:${channel.id}`
+                    return (
+                      <NavButton
+                        key={channel.id}
+                        active={view === 'conversation' && id === activeConversationId}
+                        unread={Boolean(unread[id])}
+                        mention={Boolean(mentionUnread[id])}
+                        onClick={() => selectConversation(id)}
+                      >
+                        <StarIcon className="size-3.5 shrink-0 fill-white/70" />
+                        <span className="min-w-0 truncate">{channel.name}</span>
+                        <UnreadBadge count={unread[id]} mention={mentionUnread[id]} />
+                      </NavButton>
+                    )
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            <Collapsible defaultOpen className="mt-3">
+              <div className="flex items-center pr-1">
+                <CollapsibleTrigger className="flex flex-1 items-center gap-1 px-3 py-1 text-[13px] text-white/60 hover:text-white">
+                  <ChevronDownIcon className="size-3" />
+                  Channels
+                </CollapsibleTrigger>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Add channel"
+                        className="text-white/70 hover:bg-white/10 hover:text-white"
+                      />
+                    }
+                  >
+                    <PlusIcon />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setCreateOpen(true)}>
+                      Create channel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setBrowseOpen(true)}>
+                      Browse channels
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <CollapsibleContent>
+                {joinedChannels.map((channel) => {
+                  const id = `channel:${channel.id}`
+                  return (
+                    <NavButton
+                      key={channel.id}
+                      active={view === 'conversation' && id === activeConversationId}
+                      unread={Boolean(unread[id])}
+                      mention={Boolean(mentionUnread[id])}
+                      onClick={() => selectConversation(id)}
+                    >
+                      {channel.isPrivate ? (
+                        <LockIcon className="size-3.5 shrink-0" />
+                      ) : (
+                        <HashIcon className="size-3.5 shrink-0" />
+                      )}
+                      <span className="min-w-0 truncate">{channel.name}</span>
+                      <UnreadBadge count={unread[id]} mention={mentionUnread[id]} />
+                    </NavButton>
+                  )
+                })}
+                <NavButton onClick={() => setCreateOpen(true)}>
+                  <PlusIcon className="size-3.5 shrink-0" />
+                  <span className="text-white/50">Add channel</span>
+                </NavButton>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <Collapsible defaultOpen className="mt-3">
+              <div className="flex items-center pr-1">
+                <CollapsibleTrigger className="flex flex-1 items-center gap-1 px-3 py-1 text-[13px] text-white/60 hover:text-white">
+                  <ChevronDownIcon className="size-3" />
+                  Direct messages
+                </CollapsibleTrigger>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Add teammates"
+                  className="text-white/70 hover:bg-white/10 hover:text-white"
+                  onClick={() => setNewMessageOpen(true)}
+                >
+                  <PlusIcon />
+                </Button>
+              </div>
+              <CollapsibleContent>
+                {others.map((user) => {
+                  const id = `dm:${user.id}`
+                  return (
+                    <NavButton
+                      key={user.id}
+                      active={view === 'conversation' && id === activeConversationId}
+                      unread={Boolean(unread[id])}
+                      mention={Boolean(mentionUnread[id])}
+                      onClick={() => selectConversation(id)}
+                    >
+                      <PresenceAvatar user={user} size={20} />
+                      <span className="min-w-0 truncate">{user.name}</span>
+                      <UnreadBadge count={unread[id]} mention={mentionUnread[id]} />
+                    </NavButton>
+                  )
+                })}
+                <NavButton onClick={() => setNewMessageOpen(true)}>
+                  <PersonAddIcon className="size-3.5 shrink-0" />
+                  <span className="text-white/50">Add teammates</span>
+                </NavButton>
+              </CollapsibleContent>
+            </Collapsible>
+          </nav>
+        </div>
+
+        <button
+          type="button"
+          className="flex shrink-0 items-center gap-2 border-t border-white/10 px-3 py-3 text-left hover:bg-white/10"
+          onClick={() => setProfileOpen(true)}
         >
-          <PresenceAvatar user={me} size={32} />
-          <Stack direction="vertical" gap="none" style={{ minWidth: 0 }}>
-            <Text weight="semibold" size="small">
-              {me.name}
-            </Text>
-            <Text size="small" style={{ color: 'var(--fgColor-muted)' }}>
-              Active
-            </Text>
-          </Stack>
-        </Stack>
+          <PresenceAvatar user={currentUser} size={32} />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold text-white">
+              {currentUser.name}
+            </span>
+            <span className="block truncate text-xs text-white/60">
+              {presenceLabel(currentUser.presence)}
+              {currentUser.statusText ? ` · ${currentUser.statusText}` : ''}
+            </span>
+          </span>
+        </button>
       </aside>
 
-      {dialogOpen && (
-        <Dialog
-          title="Create a channel"
-          subtitle="Channels are where your team communicates. They are best organized around a topic."
-          onClose={() => setDialogOpen(false)}
-          footerButtons={[
-            { buttonType: 'default', content: 'Cancel', onClick: () => setDialogOpen(false) },
-            {
-              buttonType: 'primary',
-              content: 'Create',
-              disabled: !name.trim(),
-              onClick: submitChannel,
-            },
-          ]}
-        >
-          <Stack direction="vertical" gap="normal">
-            <FormControl required>
-              <FormControl.Label>Name</FormControl.Label>
-              <TextInput
-                block
-                leadingVisual={isPrivate ? LockIcon : HashIcon}
-                placeholder="e.g. plan-budget"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
-              <FormControl.Caption>
-                Lowercase, without spaces or periods.
-              </FormControl.Caption>
-            </FormControl>
-            <FormControl>
-              <FormControl.Label>Description</FormControl.Label>
-              <TextInput
-                block
-                placeholder="What is this channel about?"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </FormControl>
-            <FormControl>
-              <Checkbox
-                checked={isPrivate}
-                onChange={(e) => setIsPrivate(e.target.checked)}
-              />
-              <FormControl.Label>Make private</FormControl.Label>
-              <FormControl.Caption>
-                Only invited members can view or join a private channel.
-              </FormControl.Caption>
-            </FormControl>
-          </Stack>
-        </Dialog>
-      )}
+      <CreateChannelDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <NewMessageDialog open={newMessageOpen} onOpenChange={setNewMessageOpen} />
+      <BrowseChannelsDialog open={browseOpen} onOpenChange={setBrowseOpen} />
+      <WorkspaceSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <UserProfileDialog user={currentUser} open={profileOpen} onOpenChange={setProfileOpen} />
     </>
   )
 }

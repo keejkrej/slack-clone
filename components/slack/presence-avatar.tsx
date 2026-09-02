@@ -1,50 +1,56 @@
 'use client'
 
-import { Avatar } from './ui'
-import type { Presence, User } from '@/lib/data'
+import {
+  Avatar,
+  AvatarBadge,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
+import { initials, type Presence, type User } from '@/lib/data'
 
-const presenceToken: Record<Presence, string> = {
-  online: 'var(--bgColor-success-emphasis)',
-  away: 'var(--bgColor-attention-emphasis)',
-  offline: 'var(--bgColor-neutral-emphasis)',
+const presenceClass: Record<Presence, string> = {
+  online: 'bg-emerald-500',
+  away: 'bg-amber-400',
+  offline: 'bg-zinc-400',
 }
 
 export function PresenceAvatar({
   user,
   size = 36,
   showPresence = true,
+  className,
 }: {
   user: User
   size?: number
   showPresence?: boolean
+  className?: string
 }) {
-  const dot = Math.max(8, Math.round(size * 0.3))
   return (
-    <span
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        flexShrink: 0,
-        width: size,
-        height: size,
-      }}
+    <Avatar
+      className={cn(
+        'rounded-md after:rounded-md',
+        className,
+      )}
+      style={{ width: size, height: size }}
     >
-      <Avatar src={user.avatar} size={size} alt={user.name} square />
+      <AvatarImage
+        src={user.avatar}
+        alt={user.name}
+        className="rounded-md"
+      />
+      <AvatarFallback className="rounded-md text-[10px]">
+        {initials(user.name)}
+      </AvatarFallback>
       {showPresence && (
-        <span
-          aria-hidden
-          style={{
-            position: 'absolute',
-            right: -2,
-            bottom: -2,
-            width: dot,
-            height: dot,
-            borderRadius: 'var(--borderRadius-full)',
-            backgroundColor: presenceToken[user.presence],
-            border: 'var(--borderWidth-thick) solid var(--bgColor-default)',
-          }}
+        <AvatarBadge
+          className={cn(
+            'ring-background',
+            presenceClass[user.presence],
+            size <= 24 && 'size-2',
+          )}
         />
       )}
-    </span>
+    </Avatar>
   )
 }

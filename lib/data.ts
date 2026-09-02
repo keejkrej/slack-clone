@@ -1,5 +1,9 @@
 export type Presence = 'online' | 'away' | 'offline'
 
+export type NotificationPref = 'all' | 'mentions' | 'muted'
+
+export type WorkspaceView = 'conversation' | 'threads' | 'activity' | 'saved'
+
 export type User = {
   id: string
   name: string
@@ -7,12 +11,14 @@ export type User = {
   title: string
   avatar: string
   presence: Presence
+  statusText?: string
 }
 
 export type Channel = {
   id: string
   name: string
   description: string
+  topic: string
   isPrivate: boolean
   memberIds: string[]
 }
@@ -35,6 +41,12 @@ export type Message = {
   reactions: Reaction[]
   /** When set, this message is a thread reply to the parent */
   parentId?: string
+  edited?: boolean
+  deleted?: boolean
+  pinned?: boolean
+  saved?: boolean
+  /** User ids plus the sentinel `'channel'` for @channel / @here */
+  mentions?: string[]
 }
 
 export const CURRENT_USER_ID = 'u-alex'
@@ -47,6 +59,7 @@ export const users: User[] = [
     title: 'Product Engineer',
     avatar: '/avatars/alex.png',
     presence: 'online',
+    statusText: 'Building the chat MVP',
   },
   {
     id: 'u-priya',
@@ -55,6 +68,7 @@ export const users: User[] = [
     title: 'Design Lead',
     avatar: '/avatars/priya.png',
     presence: 'online',
+    statusText: 'In design crit',
   },
   {
     id: 'u-marcus',
@@ -63,6 +77,7 @@ export const users: User[] = [
     title: 'Staff Engineer',
     avatar: '/avatars/marcus.png',
     presence: 'away',
+    statusText: 'On a call',
   },
   {
     id: 'u-sofia',
@@ -87,6 +102,7 @@ export const users: User[] = [
     title: 'Product Manager',
     avatar: '/avatars/hana.png',
     presence: 'online',
+    statusText: 'Heads down on launch',
   },
 ]
 
@@ -97,6 +113,7 @@ export const channels: Channel[] = [
     id: 'general',
     name: 'general',
     description: 'Company-wide announcements and work-based matters',
+    topic: 'All-hands today at 11:00 · keep it work-related',
     isPrivate: false,
     memberIds: everyone,
   },
@@ -104,13 +121,15 @@ export const channels: Channel[] = [
     id: 'engineering',
     name: 'engineering',
     description: 'Shipping, incidents, PR reviews, and architecture chatter',
+    topic: 'Deploy freeze lifts Friday 4pm',
     isPrivate: false,
     memberIds: ['u-alex', 'u-marcus', 'u-sofia', 'u-devon'],
   },
   {
     id: 'design',
     name: 'design',
-    description: 'Design critiques, Figma links, and Primer component talk',
+    description: 'Design critiques, Figma links, and component talk',
+    topic: 'Thread pane crit at 2pm',
     isPrivate: false,
     memberIds: ['u-alex', 'u-priya', 'u-hana'],
   },
@@ -118,6 +137,7 @@ export const channels: Channel[] = [
     id: 'random',
     name: 'random',
     description: 'Non-work banter, links, and the occasional cat photo',
+    topic: 'Coffee run at 3',
     isPrivate: false,
     memberIds: everyone,
   },
@@ -125,8 +145,17 @@ export const channels: Channel[] = [
     id: 'launch-q3',
     name: 'launch-q3',
     description: 'Private coordination for the Q3 launch',
+    topic: 'Launch checklist is at 80%',
     isPrivate: true,
     memberIds: ['u-alex', 'u-sofia', 'u-hana'],
+  },
+  {
+    id: 'social',
+    name: 'social',
+    description: 'Team social events, offsites, and hangouts',
+    topic: 'Pizza Friday in the kitchen',
+    isPrivate: false,
+    memberIds: ['u-priya', 'u-hana', 'u-devon', 'u-sofia'],
   },
 ]
 
@@ -166,6 +195,7 @@ export const seedMessages: Message[] = [
     text: 'The new onboarding doc is live. It covers workspace conventions, channel etiquette, and where to find things. Would love a second pair of eyes on the "Getting help" section.',
     time: '9:12 AM',
     day: 'Today',
+    pinned: true,
     reactions: [
       { emoji: '🎉', userIds: ['u-alex', 'u-hana', 'u-sofia', 'u-devon'] },
       { emoji: '👀', userIds: ['u-marcus'] },
@@ -209,6 +239,8 @@ export const seedMessages: Message[] = [
     text: 'Opened a PR that migrates the message store to the new reducer pattern. It touches a lot of files, so reviews welcome: primer/chat#412',
     time: '8:30 AM',
     day: 'Today',
+    pinned: true,
+    saved: true,
     reactions: [{ emoji: '👀', userIds: ['u-alex', 'u-devon'] }],
   },
   {
@@ -365,9 +397,10 @@ export const seedMessages: Message[] = [
     id: 'l2',
     conversationId: 'channel:launch-q3',
     authorId: 'u-sofia',
-    text: 'I will own the status page copy. Alex, can you take the changelog?',
+    text: 'I will own the status page copy. @alex can you take the changelog?',
     time: '8:22 AM',
     day: 'Today',
+    mentions: ['u-alex'],
     reactions: [],
   },
 
@@ -379,6 +412,7 @@ export const seedMessages: Message[] = [
     text: 'Hey! Do you have 15 minutes before crit to look at the reaction chip states with me?',
     time: '11:02 AM',
     day: 'Today',
+    saved: true,
     reactions: [],
   },
   {
@@ -430,9 +464,10 @@ export const seedMessages: Message[] = [
     id: 'h1',
     conversationId: 'dm:u-hana',
     authorId: 'u-hana',
-    text: 'Did you see the customer feedback thread? Two people asked for threaded replies in DMs.',
+    text: '@alex did you see the customer feedback thread? Two people asked for threaded replies in DMs.',
     time: '1:20 PM',
     day: 'Today',
+    mentions: ['u-alex'],
     reactions: [],
   },
 ]
@@ -440,9 +475,17 @@ export const seedMessages: Message[] = [
 export const seedUnread: Record<string, number> = {
   'channel:engineering': 3,
   'channel:design': 1,
+  'channel:launch-q3': 1,
   'dm:u-hana': 1,
   'dm:u-marcus': 1,
 }
+
+export const seedMentionUnread: Record<string, number> = {
+  'channel:launch-q3': 1,
+  'dm:u-hana': 1,
+}
+
+export const seedStarredChannelIds: string[] = ['engineering']
 
 export const EMOJI_CHOICES = [
   '👍',
@@ -463,18 +506,99 @@ export const EMOJI_CHOICES = [
   '💡',
 ]
 
-export function getUser(id: string): User {
-  return users.find((u) => u.id === id) ?? users[0]
+export function getUser(id: string, userList: User[] = users): User {
+  return userList.find((u) => u.id === id) ?? userList[0] ?? users[0]
 }
 
-export function getChannel(id: string): Channel | undefined {
-  return channels.find((c) => c.id === id)
+export function getChannel(
+  id: string,
+  channelList: Channel[] = channels,
+): Channel | undefined {
+  return channelList.find((c) => c.id === id)
 }
 
-export function conversationLabel(conversationId: string): string {
+export function conversationLabel(
+  conversationId: string,
+  channelList: Channel[] = channels,
+  userList: User[] = users,
+): string {
   if (conversationId.startsWith('channel:')) {
-    const c = getChannel(conversationId.slice('channel:'.length))
+    const c = getChannel(conversationId.slice('channel:'.length), channelList)
     return c ? `#${c.name}` : conversationId
   }
-  return getUser(conversationId.slice('dm:'.length)).name
+  if (conversationId.startsWith('dm:')) {
+    return getUser(conversationId.slice('dm:'.length), userList).name
+  }
+  return conversationId
+}
+
+export function channelIdFrom(conversationId: string): string | null {
+  return conversationId.startsWith('channel:')
+    ? conversationId.slice('channel:'.length)
+    : null
+}
+
+export function dmUserIdFrom(conversationId: string): string | null {
+  return conversationId.startsWith('dm:')
+    ? conversationId.slice('dm:'.length)
+    : null
+}
+
+export function slugifyChannelName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+export function extractMentions(text: string, userList: User[] = users): string[] {
+  const found = new Set<string>()
+  const re = /@([a-zA-Z0-9_-]+)/g
+  let match: RegExpExecArray | null
+  while ((match = re.exec(text))) {
+    const token = match[1].toLowerCase()
+    if (token === 'channel' || token === 'here' || token === 'everyone') {
+      found.add('channel')
+      continue
+    }
+    const user = userList.find((u) => u.handle.toLowerCase() === token)
+    if (user) found.add(user.id)
+  }
+  return [...found]
+}
+
+export function messageMentions(message: Message, userList: User[] = users): string[] {
+  return message.mentions ?? extractMentions(message.text, userList)
+}
+
+export function mentionsCurrentUser(message: Message, userList: User[] = users): boolean {
+  const ids = messageMentions(message, userList)
+  return ids.includes(CURRENT_USER_ID) || ids.includes('channel')
+}
+
+export function draftKey(conversationId: string, parentId?: string): string {
+  return parentId ? `thread:${parentId}` : conversationId
+}
+
+export function presenceLabel(presence: Presence): string {
+  if (presence === 'online') return 'Active'
+  if (presence === 'away') return 'Away'
+  return 'Offline'
+}
+
+export function nowLabel(): string {
+  return new Date().toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+export function initials(name: string): string {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 }
