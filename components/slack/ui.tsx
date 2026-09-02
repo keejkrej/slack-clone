@@ -23,12 +23,12 @@ Blankslate.Visual=({children}:any)=><div className="mb-3">{children}</div>
 Blankslate.Heading=({children}:any)=><h3 className="font-semibold">{children}</h3>
 Blankslate.Description=({children}:any)=><p className="text-sm text-muted-foreground">{children}</p>
 export const Checkbox=({checked,onChange,...props}:any)=><input type="checkbox" checked={checked} onChange={onChange} {...props}/>
-export const Dialog:any=({title,children,onClose}:any)=><div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"><div className="w-full max-w-md rounded-lg border bg-card p-6"><h2 className="mb-4 font-semibold">{title}</h2>{children}</div></div>
+export const Dialog:any=({title,children}:any)=><div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"><div className="w-full max-w-md rounded-lg border bg-card p-6"><h2 className="mb-4 font-semibold">{title}</h2>{children}</div></div>
 Dialog.Header=({children}:any)=><div className="mb-4">{children}</div>
 Dialog.Title=({children}:any)=><h2 className="text-lg font-semibold">{children}</h2>
 Dialog.Body=({children}:any)=><div>{children}</div>
 Dialog.Footer=({children}:any)=><div className="mt-5 flex justify-end gap-2">{children}</div>
-export function AnchoredOverlay({open,onClose,children}:any){return open?<div className="absolute right-0 top-full z-50 mt-2 rounded-lg border bg-popover p-2 text-popover-foreground shadow-lg">{children}</div>:null}
+export function AnchoredOverlay({open,children}:any){return open?<div className="absolute right-0 top-full z-50 mt-2 rounded-lg border bg-popover p-2 text-popover-foreground shadow-lg">{children}</div>:null}
 export const ActionMenu:any = ({children}:any)=><div className="relative">{children}</div>
 ActionMenu.Anchor=({children}:any)=><>{children}</>
 ActionMenu.Overlay=({children}:any)=><div className="absolute right-0 top-full z-50 mt-2 min-w-56 rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg">{children}</div>
@@ -39,7 +39,7 @@ ActionList.Description=({children}:any)=><span className="ml-auto text-xs text-m
 ActionList.Divider=()=> <div className="my-1 border-t"/>
 export const NavList:any = ({children}:any)=><nav className="flex flex-col gap-0.5">{children}</nav>
 NavList.Divider=()=> <div className="my-2 border-t"/>
-NavList.Item=({children,href,onClick,selected,className}:any)=><button className={cn('flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground',selected&&'bg-accent text-accent-foreground',className)} onClick={onClick}>{children}</button>
+NavList.Item=({children,onClick,selected,className}:any)=><button className={cn('flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground',selected&&'bg-accent text-accent-foreground',className)} onClick={onClick}>{children}</button>
 NavList.LeadingVisual=({children}:any)=><span className="flex shrink-0">{children}</span>
 NavList.TrailingVisual=({children}:any)=><span className="ml-auto">{children}</span>
 NavList.Group=({children}:any)=><div className="flex flex-col gap-0.5">{children}</div>
