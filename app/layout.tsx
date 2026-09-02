@@ -5,7 +5,7 @@ import { Providers } from '@/components/providers'
 export const metadata: Metadata = {
   title: 'Octo Labs | Chat',
   description:
-    'A Slack-style team chat with channels, direct messages, threads, reactions, and search, built with the Primer design system.',
+    'A polished Slack-style team chat with channels, direct messages, threads, reactions, and search.',
 }
 
 export const viewport: Viewport = {
@@ -22,9 +22,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-color-mode="dark"
-      data-light-theme="light"
-      data-dark-theme="dark"
+      className="dark"
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>

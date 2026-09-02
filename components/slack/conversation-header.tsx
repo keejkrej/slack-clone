@@ -10,7 +10,7 @@ import {
   Avatar,
   ActionMenu,
   ActionList,
-} from '@primer/react'
+} from './ui'
 import {
   HashIcon,
   LockIcon,
@@ -21,7 +21,7 @@ import {
   InfoIcon,
   StarIcon,
   ThreeBarsIcon,
-} from '@primer/octicons-react'
+} from './icons'
 import { getChannel, getUser } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { PresenceAvatar } from './presence-avatar'

@@ -1,6 +1,6 @@
 'use client'
 
-import { Stack, TextInput, IconButton, ActionMenu, ActionList, Text } from '@primer/react'
+import { Stack, TextInput, IconButton, ActionMenu, ActionList, Text } from './ui'
 import {
   SearchIcon,
   ChevronLeftIcon,
@@ -10,7 +10,7 @@ import {
   GearIcon,
   SignOutIcon,
   PersonIcon,
-} from '@primer/octicons-react'
+} from './icons'
 import { CURRENT_USER_ID, getUser } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { PresenceAvatar } from './presence-avatar'

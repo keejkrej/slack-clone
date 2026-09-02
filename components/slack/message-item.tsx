@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Stack, Text, IconButton, Button, AvatarStack, Avatar } from '@primer/react'
-import { CommentDiscussionIcon, ReplyIcon } from '@primer/octicons-react'
+import { Stack, Text, IconButton, Button, AvatarStack, Avatar } from './ui'
+import { CommentDiscussionIcon, ReplyIcon } from './icons'
 import { CURRENT_USER_ID, getUser, type Message } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { PresenceAvatar } from './presence-avatar'

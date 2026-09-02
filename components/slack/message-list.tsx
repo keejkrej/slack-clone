@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Stack, Text, Heading } from '@primer/react'
-import { HashIcon, LockIcon } from '@primer/octicons-react'
+import { Stack, Text, Heading } from './ui'
+import { HashIcon, LockIcon } from './icons'
 import { getChannel, getUser, type Message } from '@/lib/data'
 import { MessageItem } from './message-item'
 

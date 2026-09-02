@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Stack, Text, Heading, IconButton } from '@primer/react'
-import { XIcon } from '@primer/octicons-react'
+import { Stack, Text, Heading, IconButton } from './ui'
+import { XIcon } from './icons'
 import { conversationLabel, getUser } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { MessageItem } from './message-item'

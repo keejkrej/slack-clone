@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type KeyboardEvent } from 'react'
-import { Textarea, IconButton, Stack, Text } from '@primer/react'
+import { Textarea, IconButton, Stack, Text } from './ui'
 import {
   PaperAirplaneIcon,
   BoldIcon,
@@ -11,7 +11,7 @@ import {
   ListUnorderedIcon,
   PaperclipIcon,
   MentionIcon,
-} from '@primer/octicons-react'
+} from './icons'
 
 export function Composer({
   placeholder,

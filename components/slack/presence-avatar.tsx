@@ -1,6 +1,6 @@
 'use client'
 
-import { Avatar } from '@primer/react'
+import { Avatar } from './ui'
 import type { Presence, User } from '@/lib/data'
 
 const presenceToken: Record<Presence, string> = {

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { AnchoredOverlay, IconButton, Text, Stack } from '@primer/react'
-import { SmileyIcon } from '@primer/octicons-react'
+import { AnchoredOverlay, IconButton, Text, Stack } from './ui'
+import { SmileyIcon } from './icons'
 import { EMOJI_CHOICES } from '@/lib/data'
 
 export function ReactionPicker({

@@ -14,8 +14,8 @@ import {
   FormControl,
   TextInput,
   Checkbox,
-} from '@primer/react'
-import { Dialog } from '@primer/react/experimental'
+} from './ui'
+import { Dialog } from './ui'
 import {
   HashIcon,
   LockIcon,
@@ -28,7 +28,7 @@ import {
   GearIcon,
   SignOutIcon,
   PersonIcon,
-} from '@primer/octicons-react'
+} from './icons'
 import { users, CURRENT_USER_ID, getUser } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { PresenceAvatar } from './presence-avatar'

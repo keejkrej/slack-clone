@@ -1,8 +1,8 @@
 'use client'
 
-import { Stack, Text, Heading, Label, IconButton } from '@primer/react'
-import { Blankslate } from '@primer/react/experimental'
-import { SearchIcon, HashIcon, LockIcon, XIcon } from '@primer/octicons-react'
+import { Stack, Text, Heading, Label, IconButton } from './ui'
+import { Blankslate } from './ui'
+import { SearchIcon, HashIcon, LockIcon, XIcon } from './icons'
 import { conversationLabel, getUser } from '@/lib/data'
 import { useWorkspace } from './workspace-provider'
 import { PresenceAvatar } from './presence-avatar'
